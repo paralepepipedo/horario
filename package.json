@@ -1,0 +1,12 @@
+{
+  "name": "horarios-colegio",
+  "version": "1.0.0",
+  "description": "Sistema de Horarios Escolares",
+  "main": "api/horarios.js",
+  "scripts": {
+    "start": "node api/horarios.js"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^0.9.0"
+  }
+}
