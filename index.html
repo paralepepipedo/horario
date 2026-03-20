@@ -336,6 +336,78 @@
 
     .modal-body {
       padding: 20px;
+      max-height: 60vh;
+      overflow-y: auto;
+    }
+
+    .mei-compact {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 12px;
+      border-radius: var(--r);
+      margin-bottom: 5px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: filter .15s;
+    }
+
+    .mei-compact:hover {
+      filter: brightness(1.15);
+    }
+
+    .mei-compact .mei-emoji {
+      font-size: 17px;
+      flex-shrink: 0;
+    }
+
+    .mei-compact .mei-asig {
+      font-family: 'Cinzel', serif;
+      font-size: 10px;
+      font-weight: 600;
+      color: #fff;
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .mei-compact .mei-fecha-sm {
+      font-size: 10px;
+      color: var(--text-mut);
+      font-weight: 700;
+      flex-shrink: 0;
+      margin-right: 6px;
+    }
+
+    .mei-compact .mei-dias {
+      font-family: 'Cinzel', serif;
+      font-size: 10px;
+      font-weight: 600;
+      flex-shrink: 0;
+      min-width: 52px;
+      text-align: right;
+    }
+
+    .mei-expand-btn {
+      width: 100%;
+      background: rgba(201, 162, 39, .07);
+      border: 1px dashed rgba(201, 162, 39, .25);
+      border-radius: var(--r);
+      color: var(--gold);
+      font-family: 'Cinzel', serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .04em;
+      padding: 8px;
+      cursor: pointer;
+      margin-top: 4px;
+      transition: background .15s;
+    }
+
+    .mei-expand-btn:hover {
+      background: rgba(201, 162, 39, .14);
     }
 
     .modal-intro {
@@ -1556,6 +1628,20 @@
       }
     }
 
+    function filaMeiCompacta(e) {
+      var dr = diasR(e.fecha_evaluacion);
+      var ac = AC[e.asignatura] || { e: '📚' };
+      var cls = dr <= 1 ? 'mei-critical' : dr <= 3 ? 'mei-warn' : 'mei-normal';
+      var dcls = dr <= 1 ? 'dc' : dr <= 3 ? 'dw' : 'dn';
+      var dtxt = dr === 0 ? 'HOY' : dr === 1 ? 'MAÑANA' : dr + ' días';
+      return '<div class="mei-compact ' + cls + '" onclick=\'abrirPopup(' + JSON.stringify(e) + '); closeModal();\'>' +
+        '<span class="mei-emoji">' + ac.e + '</span>' +
+        '<span class="mei-asig">' + e.asignatura.toUpperCase() + '</span>' +
+        '<span class="mei-fecha-sm">' + fmtF(e.fecha_evaluacion) + '</span>' +
+        '<span class="mei-dias ' + dcls + '">' + dtxt + '</span>' +
+        '</div>';
+    }
+
     function abrirModal(evals) {
       var lu = getLunes(S.offset), vi = new Date(lu); vi.setDate(lu.getDate() + 4);
       document.getElementById('modalRange').textContent =
@@ -1564,24 +1650,37 @@
 
       var urg = evals.filter(function (e) { return diasR(e.fecha_evaluacion) <= 1; });
       document.getElementById('modalIntro').innerHTML = urg.length
-        ? '🚨 Tienes <strong style="color:var(--red-l)">' + urg.length + ' evaluación' + (urg.length > 1 ? 'es' : ' urgente') + '</strong>' + (evals.length - urg.length > 0 ? ' y ' + (evals.length - urg.length) + ' más esta semana.' : '.')
+        ? '🚨 Tienes <strong style="color:var(--red-l)">' + urg.length + ' evaluación' + (urg.length > 1 ? 'es urgentes' : ' urgente') + '</strong>' + (evals.length - urg.length > 0 ? ' y ' + (evals.length - urg.length) + ' más esta semana.' : '.')
         : '📋 Tienes <strong style="color:var(--gold-l)">' + evals.length + ' evaluación' + (evals.length > 1 ? 'es' : '') + ' programada' + (evals.length > 1 ? 's' : '') + '</strong> para esta semana.';
 
+      var VISIBLE = 3;
       var mh = '';
-      evals.forEach(function (e) {
-        var dr = diasR(e.fecha_evaluacion);
-        var ac = AC[e.asignatura] || { e: '📚' };
-        mh += '<div class="mei ' + (dr <= 1 ? 'mei-critical' : dr <= 3 ? 'mei-warn' : 'mei-normal') + '">' +
-          '<div class="mei-emoji">' + ac.e + '</div>' +
-          '<div class="mei-info">' +
-          '<div class="mei-asig">' + e.asignatura.toUpperCase() + '</div>' +
-          '<div class="mei-fecha">' + fmtF(e.fecha_evaluacion) + '</div>' +
-          '<div class="mei-cont">' + (e.contenidos || '') + '</div>' +
-          '</div>' +
-          '<div class="mei-dias ' + (dr <= 1 ? 'dc' : dr <= 3 ? 'dw' : 'dn') + '">' + (dr === 0 ? 'HOY' : dr === 1 ? 'MAÑANA' : dr + ' DÍAS') + '</div>' +
-          '</div>';
-      });
+      // Mostrar primero las urgentes, luego el resto
+      var ordenadas = evals.slice().sort(function (a, b) { return diasR(a.fecha_evaluacion) - diasR(b.fecha_evaluacion); });
+      ordenadas.slice(0, VISIBLE).forEach(function (e) { mh += filaMeiCompacta(e); });
+
+      if (ordenadas.length > VISIBLE) {
+        var resto = ordenadas.length - VISIBLE;
+        mh += '<button class="mei-expand-btn" id="meiExpandBtn">▼ Ver ' + resto + ' evaluación' + (resto > 1 ? 'es' : '') + ' más</button>';
+        mh += '<div id="meiExtra" style="display:none;">';
+        ordenadas.slice(VISIBLE).forEach(function (e) { mh += filaMeiCompacta(e); });
+        mh += '</div>';
+      }
+
       document.getElementById('modalList').innerHTML = mh;
+
+      var btn = document.getElementById('meiExpandBtn');
+      if (btn) {
+        btn.addEventListener('click', function () {
+          var extra = document.getElementById('meiExtra');
+          var abierto = extra.style.display !== 'none';
+          extra.style.display = abierto ? 'none' : 'block';
+          btn.textContent = abierto
+            ? '▼ Ver ' + (ordenadas.length - VISIBLE) + ' evaluación' + (ordenadas.length - VISIBLE > 1 ? 'es' : '') + ' más'
+            : '▲ Mostrar menos';
+        });
+      }
+
       document.getElementById('weeklyModal').classList.add('active');
     }
 
