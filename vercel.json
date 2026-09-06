@@ -8,5 +8,9 @@
       "source": "/(.*)",
       "destination": "/public/$1"
     }
+  ],
+  "crons": [
+    { "path": "/api/enviar-notificaciones", "schedule": "0 11 * * *" },
+    { "path": "/api/enviar-notificaciones", "schedule": "0 12 * * *" }
   ]
 }

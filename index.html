@@ -1310,6 +1310,7 @@
       </div>
     </div>
     <div class="header-right">
+      <button id="btnNotif" class="header-badge" style="display:none;background:none;border:1px solid var(--border);color:var(--text-dim);font-family:inherit" onclick="toggleNotif()"></button>
       <a href="admin.html" class="header-badge" style="text-decoration:none;color:var(--text-dim);border:1px solid var(--border)" title="Panel de administración">⚙ Admin</a>
       <div id="headerBadges" style="display:flex;align-items:center;gap:8px"></div>
     </div>
@@ -1374,7 +1375,7 @@
       <div class="week-label" id="weekLabel">—</div>
       <button class="wbtn" onclick="cambiarSemana(1)">›</button>
       <button class="wbtn" style="font-size:11px;font-weight:800;color:var(--cyan-l);border-color:rgba(8,145,178,.3)"
-        onclick="S.offset=0;calcEvals();refreshUI()">Hoy</button>
+        onclick="S.offset=0;calcEvals();refreshUI();renderTabla()">Hoy</button>
       <span class="week-badge" id="weekBadge"></span>
     </div>
 
@@ -1471,7 +1472,73 @@
 
       refreshUI();
       cargarTodo();
+      initNotif();
     });
+
+    /* ══════════════════════════════════════════
+       NOTIFICACIONES PUSH
+    ══════════════════════════════════════════ */
+    var VAPID_PUBLIC_KEY = 'BHZZbruTlfAJ5ZiCJveJZjweQb8aU4vngPgOmR1KROuOQV2Q32bMhVnP1Ofi7t4lMurqehA6xA9A5GmD8zndn1g';
+
+    function urlBase64ToUint8Array(base64String) {
+      var padding = '='.repeat((4 - base64String.length % 4) % 4);
+      var base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+      var raw = atob(base64);
+      var out = new Uint8Array(raw.length);
+      for (var i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
+      return out;
+    }
+
+    function pintarBtnNotif(activo) {
+      var b = document.getElementById('btnNotif');
+      if (!b) return;
+      b.style.display = 'flex';
+      b.textContent = activo ? '🔔 Recordatorios ON' : '🔕 Activar recordatorios';
+      b.title = activo ? 'Desactivar recordatorios de evaluaciones' : 'Recibe un aviso diario a las 8am cuando tengas evaluaciones esta semana';
+    }
+
+    function initNotif() {
+      if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+
+      navigator.serviceWorker.register('/sw.js').then(function (reg) {
+        return reg.pushManager.getSubscription();
+      }).then(function (sub) {
+        pintarBtnNotif(!!sub);
+      }).catch(function (err) {
+        console.error('No se pudo inicializar el service worker:', err);
+      });
+    }
+
+    function toggleNotif() {
+      navigator.serviceWorker.ready.then(function (reg) {
+        return reg.pushManager.getSubscription().then(function (sub) {
+          if (sub) {
+            var endpoint = sub.endpoint;
+            return sub.unsubscribe().then(function () {
+              return fetch('/api/eliminar-suscripcion', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ endpoint: endpoint })
+              });
+            }).then(function () { pintarBtnNotif(false); });
+          }
+
+          return Notification.requestPermission().then(function (permiso) {
+            if (permiso !== 'granted') return;
+            return reg.pushManager.subscribe({
+              userVisibleOnly: true,
+              applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+            }).then(function (nuevaSub) {
+              return fetch('/api/guardar-suscripcion', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ subscription: nuevaSub })
+              }).then(function () { pintarBtnNotif(true); });
+            });
+          });
+        });
+      }).catch(function (err) {
+        console.error('Error activando notificaciones:', err);
+      });
+    }
 
     /* ══════════════════════════════════════════
        CARGA DESDE NUESTRA API EN VERCEL
