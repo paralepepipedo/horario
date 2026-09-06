@@ -5,6 +5,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1.0" />
   <title>Horario de Clases — John John High School</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="favicon.svg" />
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#0a1628" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link
     href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Nunito:wght@400;600;700;800;900&display=swap"
@@ -76,6 +80,14 @@
       display: flex;
       align-items: center;
       gap: 12px;
+      min-width: 0;
+      flex: 1 1 auto;
+      overflow: hidden;
+    }
+
+    .header-logo > div {
+      min-width: 0;
+      overflow: hidden;
     }
 
     .logo-crest {
@@ -97,6 +109,9 @@
       color: #fff;
       font-weight: 700;
       letter-spacing: .04em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .logo-sub {
@@ -104,12 +119,16 @@
       color: var(--gold);
       font-weight: 700;
       letter-spacing: .06em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .header-right {
       display: flex;
       align-items: center;
       gap: 8px;
+      flex-shrink: 0;
     }
 
     .header-badge {
@@ -540,15 +559,28 @@
     #toastStack {
       position: fixed;
       bottom: 20px;
+      left: 20px;
       right: 20px;
       z-index: 300;
       display: flex;
       flex-direction: column-reverse;
+      align-items: flex-end;
       gap: 8px;
-      max-width: 320px;
+      max-height: 55vh;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    @media(min-width:400px) {
+      #toastStack {
+        left: auto;
+        width: 320px;
+      }
     }
 
     .toast-item {
+      pointer-events: auto;
+      width: 100%;
       display: flex;
       align-items: flex-start;
       gap: 10px;
@@ -559,6 +591,7 @@
       border-left: 3px solid;
       cursor: pointer;
       animation: tSlide .3s cubic-bezier(.34, 1.56, .64, 1);
+      flex-shrink: 0;
     }
 
     @keyframes tSlide {
@@ -1084,6 +1117,17 @@
       color: var(--gold-l);
     }
 
+    .spinner {
+      width: 22px;
+      height: 22px;
+      margin: 0 auto 10px;
+      border: 3px solid rgba(201, 162, 39, .2);
+      border-top-color: var(--gold-l);
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
     /* POPUP */
     #evalPopup {
       position: fixed;
@@ -1237,6 +1281,21 @@
       .horario-title {
         font-size: 15px
       }
+
+      .mei-compact {
+        gap: 8px;
+        padding: 7px 10px;
+      }
+
+      .mei-compact .mei-asig {
+        white-space: normal;
+        overflow: visible;
+        text-overflow: clip;
+      }
+
+      .mei-compact .mei-fecha-sm {
+        display: none;
+      }
     }
   </style>
 </head>
@@ -1250,7 +1309,10 @@
         <div class="logo-sub">HORARIO DE CLASES · 5° BÁSICO</div>
       </div>
     </div>
-    <div class="header-right" id="headerBadges"></div>
+    <div class="header-right">
+      <a href="admin.html" class="header-badge" style="text-decoration:none;color:var(--text-dim);border:1px solid var(--border)" title="Panel de administración">⚙ Admin</a>
+      <div id="headerBadges" style="display:flex;align-items:center;gap:8px"></div>
+    </div>
   </header>
 
   <div id="urgencyBanner">
@@ -1333,6 +1395,16 @@
       </button>
       <div class="evals-body" id="evalsBody"></div>
     </div>
+
+    <div style="height:16px"></div>
+
+    <div class="evals-section">
+      <button class="evals-toggle" onclick="toggleAvisos()">
+        <div class="evals-tl"><span>AVISOS</span><span class="evals-cnt" id="avisoCount">0</span></div>
+        <div class="evals-ch" id="avisoCh">▼</div>
+      </button>
+      <div class="evals-body" id="avisosBody"></div>
+    </div>
   </div>
 
   <script>
@@ -1350,7 +1422,7 @@
     ];
 
     var AC = {
-      'Matematica': { e: '📐', c: 'ap-mat', col: '#3b82f6' },
+      'Matematicas': { e: '📐', c: 'ap-mat', col: '#3b82f6' },
       'Lenguaje': { e: '📖', c: 'ap-len', col: '#ef4444' },
       'Historia': { e: '🏛️', c: 'ap-his', col: '#eab308' },
       'Ciencias': { e: '🔬', c: 'ap-cie', col: '#22c55e' },
@@ -1365,7 +1437,23 @@
       'Libre': { e: '📋', c: 'ap-lib', col: '#475569' },
     };
 
-    var S = { matriz: {}, bloques: [], evals: [], offset: 0, semEvals: {} };
+    var TC = {
+      prueba: '📝',
+      trabajo: '📚',
+      tarea: '✏️',
+      disertacion: '🎤',
+      laboratorio: '🧪'
+    };
+
+    var AV = {
+      salida_temprana: { e: '🕐', label: 'Salida anticipada' },
+      vacaciones: { e: '🏖️', label: 'Vacaciones' },
+      feriado: { e: '🎉', label: 'Feriado' },
+      evento: { e: '📌', label: 'Evento' },
+      otro: { e: 'ℹ️', label: 'Aviso' }
+    };
+
+    var S = { matriz: {}, bloques: [], evals: [], avisos: [], offset: 0, semEvals: {} };
 
     /* ══════════════════════════════════════════
        INIT
@@ -1409,10 +1497,16 @@
             return e;
           });
 
+          S.avisos = (res.avisos || []).map(function (a) {
+            a.fecha = a.fecha.substring(0, 10);
+            return a;
+          });
+
           calcEvals();
           renderTabla();
           renderLeyenda();
           renderPanel();
+          renderAvisos();
           mostrarNotifs();
         })
         .catch(function (err) {
@@ -1561,7 +1655,7 @@
         h += '<div class="eval-row" onclick=\'abrirPopup(' + JSON.stringify(e) + ')\'>' +
           '<div class="er-em">' + ac.e + '</div>' +
           '<div class="er-inf">' +
-          '<div class="er-as">' + e.asignatura.toUpperCase() + '</div>' +
+          '<div class="er-as">' + e.asignatura.toUpperCase() + (e.tipo && TC[e.tipo] ? ' ' + TC[e.tipo] : '') + '</div>' +
           '<div class="er-fe">' + fmtF(e.fecha_evaluacion) + '</div>' +
           '<div class="er-co">' + (e.contenidos || 'Sin contenidos especificados') + '</div>' +
           '</div>' +
@@ -1576,6 +1670,38 @@
 
     function toggleEvals() {
       var b = document.getElementById('evalsBody'), c = document.getElementById('evalCh');
+      b.classList.toggle('open'); c.classList.toggle('open');
+    }
+
+    function renderAvisos() {
+      document.getElementById('avisoCount').textContent = S.avisos.length;
+      if (S.avisos.length === 0) {
+        document.getElementById('avisosBody').innerHTML = '<div style="padding:20px;text-align:center;font-size:11px;color:var(--text-dim)">No hay avisos próximos.</div>';
+        return;
+      }
+      var h = '';
+      S.avisos.forEach(function (a) {
+        var ac = AV[a.tipo] || AV.otro;
+        var dr = diasR(a.fecha);
+        var et = dr === 0 ? 'HOY' : dr === 1 ? 'MAÑANA' : 'En ' + dr + ' días';
+
+        h += '<div class="eval-row">' +
+          '<div class="er-em">' + ac.e + '</div>' +
+          '<div class="er-inf">' +
+          '<div class="er-as">' + ac.label.toUpperCase() + '</div>' +
+          '<div class="er-fe">' + fmtF(a.fecha) + '</div>' +
+          '<div class="er-co">' + (a.descripcion || '') + '</div>' +
+          '</div>' +
+          '<div class="er-rt">' +
+          '<div class="er-di ' + (dr <= 1 ? 'dc' : dr <= 3 ? 'dw' : 'dn') + '">' + et + '</div>' +
+          '</div>' +
+          '</div>';
+      });
+      document.getElementById('avisosBody').innerHTML = h;
+    }
+
+    function toggleAvisos() {
+      var b = document.getElementById('avisosBody'), c = document.getElementById('avisoCh');
       b.classList.toggle('open'); c.classList.toggle('open');
     }
 
@@ -1622,7 +1748,7 @@
         var key = 'jjhs_' + isoD(hoy);
         if (!sessionStorage.getItem(key)) setTimeout(function () { abrirModal(todas7); }, 700);
 
-        todas7.slice(0, 4).forEach(function (e, i) {
+        todas7.slice(0, 2).forEach(function (e, i) {
           setTimeout(function () { mostrarToast(e); }, 2000 + i * 600);
         });
       }
@@ -1730,7 +1856,7 @@
       var ac = AC[ev.asignatura] || { e: '📚' };
       var dr = diasR(ev.fecha_evaluacion);
       document.getElementById('ppEm').textContent = ac.e;
-      document.getElementById('ppAs').textContent = ev.asignatura.toUpperCase();
+      document.getElementById('ppAs').textContent = ev.asignatura.toUpperCase() + (ev.tipo && TC[ev.tipo] ? ' ' + TC[ev.tipo] + ' ' + ev.tipo : '');
       document.getElementById('ppFe').textContent = '📅 ' + fmtF(ev.fecha_evaluacion);
       document.getElementById('ppCo').textContent = ev.contenidos || 'Sin contenidos especificados';
       var d = document.getElementById('ppDi');

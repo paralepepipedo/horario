@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Panel de Administración — Evaluaciones</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="favicon.svg" />
+  <meta name="theme-color" content="#0a1628" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Nunito:wght@400;600;700;800;900&display=swap"
+    rel="stylesheet" />
+
+  <style>
+    :root {
+      --navy: #0a1628;
+      --navy2: #0f1f3d;
+      --navy3: #152647;
+      --gold: #c9a227;
+      --gold-l: #e8c45a;
+      --gold-d: #9a7a1c;
+      --gold-faint: rgba(201, 162, 39, .08);
+      --red: #dc2626;
+      --red-l: #fca5a5;
+      --green-l: #86efac;
+      --cyan-l: #67e8f9;
+      --text: #e8edf5;
+      --text-dim: #8fa4c8;
+      --text-mut: #3d5478;
+      --border: rgba(201, 162, 39, .18);
+      --border-b: rgba(201, 162, 39, .28);
+      --r: 10px;
+      --r-lg: 16px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: var(--navy);
+      color: var(--text);
+      min-height: 100vh;
+      background-image:
+        linear-gradient(rgba(201, 162, 39, .025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(201, 162, 39, .025) 1px, transparent 1px);
+      background-size: 48px 48px;
+    }
+
+    .site-header {
+      background: var(--navy2);
+      border-bottom: 2px solid var(--gold);
+      padding: 0 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 62px;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, .4);
+    }
+
+    .header-logo { display: flex; align-items: center; gap: 12px; }
+
+    .logo-crest {
+      width: 42px; height: 42px;
+      background: linear-gradient(135deg, var(--gold) 0%, var(--gold-d) 100%);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+      border: 2px solid var(--gold-l);
+      box-shadow: 0 0 14px rgba(201, 162, 39, .35);
+    }
+
+    .logo-school { font-family: 'Cinzel', serif; font-size: 13px; color: #fff; font-weight: 700; letter-spacing: .04em; }
+    .logo-sub { font-size: 10px; color: var(--gold); font-weight: 700; letter-spacing: .06em; }
+
+    .back-link {
+      color: var(--text-dim);
+      text-decoration: none;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 6px 14px;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+    }
+    .back-link:hover { color: var(--gold-l); border-color: var(--border-b); }
+
+    main { max-width: 900px; margin: 0 auto; padding: 28px 20px 80px; }
+
+    h1 {
+      font-family: 'Cinzel', serif;
+      font-size: 20px;
+      color: #fff;
+      margin-bottom: 4px;
+    }
+    .subtitle { color: var(--text-dim); font-size: 13px; margin-bottom: 24px; }
+
+    .card {
+      background: var(--navy2);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: 22px;
+      margin-bottom: 22px;
+    }
+
+    .card h2 {
+      font-family: 'Cinzel', serif;
+      font-size: 14px;
+      color: var(--gold-l);
+      margin-bottom: 16px;
+      letter-spacing: .03em;
+    }
+
+    .form-row { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 14px; }
+    .field { flex: 1; min-width: 140px; }
+    .field label { display: block; font-size: 11px; color: var(--text-dim); font-weight: 700; margin-bottom: 6px; letter-spacing: .03em; }
+
+    select, input[type="file"], input[type="date"], input[type="text"], input[type="number"], textarea {
+      width: 100%;
+      background: var(--navy3);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: var(--r);
+      padding: 9px 12px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 13px;
+    }
+    select:focus, input:focus, textarea:focus { outline: none; border-color: var(--gold); }
+    textarea { resize: vertical; min-height: 44px; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: linear-gradient(135deg, var(--gold) 0%, var(--gold-d) 100%);
+      color: var(--navy);
+      border: none;
+      border-radius: var(--r);
+      padding: 10px 20px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+      letter-spacing: .02em;
+    }
+    .btn:hover { filter: brightness(1.08); }
+    .btn:disabled { opacity: .5; cursor: not-allowed; }
+    .btn-secondary {
+      background: transparent;
+      color: var(--text-dim);
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover { color: var(--red-l); border-color: var(--red); }
+
+    .status {
+      font-size: 12px;
+      font-weight: 700;
+      margin-top: 10px;
+      padding: 10px 14px;
+      border-radius: var(--r);
+      display: none;
+    }
+    .status.show { display: block; }
+    .status.ok { background: rgba(22, 163, 74, .12); color: var(--green-l); }
+    .status.err { background: rgba(220, 38, 38, .12); color: var(--red-l); }
+    .status.loading { background: var(--gold-faint); color: var(--gold-l); }
+
+    .warnings {
+      background: rgba(220, 38, 38, .08);
+      border: 1px solid rgba(220, 38, 38, .25);
+      border-radius: var(--r);
+      padding: 12px 14px;
+      margin-bottom: 16px;
+      font-size: 12px;
+      color: var(--red-l);
+      display: none;
+    }
+    .warnings.show { display: block; }
+    .warnings ul { margin: 6px 0 0 18px; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    th {
+      text-align: left;
+      font-family: 'Cinzel', serif;
+      font-size: 10px;
+      letter-spacing: .04em;
+      color: var(--text-dim);
+      padding: 8px 6px;
+      border-bottom: 1px solid var(--border-b);
+    }
+    td { padding: 6px; border-bottom: 1px solid rgba(201, 162, 39, .08); vertical-align: top; }
+    td.col-fecha { width: 130px; }
+    td.col-as, td.col-tipo { width: 130px; }
+    td.col-del { width: 34px; text-align: center; }
+
+    .row-del {
+      background: none; border: none; color: var(--text-mut); cursor: pointer; font-size: 15px;
+    }
+    .row-del:hover { color: var(--red-l); }
+
+    #previewSection, #previewAvisosSection, #saveSection { display: none; }
+    #previewSection.show, #previewAvisosSection.show, #saveSection.show { display: block; }
+
+    .grid-horario { border-collapse: collapse; font-size: 11px; }
+    .grid-horario th, .grid-horario td { border: 1px solid var(--border); padding: 4px; text-align: center; }
+    .grid-horario th { font-family: 'Cinzel', serif; font-size: 9px; color: var(--gold-l); letter-spacing: .03em; }
+    .grid-horario select { font-size: 10px; padding: 5px 4px; min-width: 100px; }
+    .grid-horario input[type="text"] { font-size: 10px; padding: 5px 4px; width: 74px; text-align: center; }
+    .grid-horario td.bloque-num { font-family: 'Cinzel', serif; color: var(--text-dim); font-weight: 700; }
+
+    .nota-anio { font-size: 11px; color: var(--text-dim); margin: -6px 0 14px; }
+    .nota-anio.warn { color: var(--gold-l); font-weight: 700; }
+
+    .empty-hint { color: var(--text-mut); font-size: 12px; text-align: center; padding: 20px; }
+
+    .dropzone {
+      border: 2px dashed var(--border-b);
+      border-radius: var(--r);
+      padding: 26px 16px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color .15s, background .15s;
+      color: var(--text-dim);
+      font-size: 12px;
+    }
+    .dropzone:hover { border-color: var(--gold); }
+    .dropzone.drag-over { border-color: var(--gold); background: var(--gold-faint); color: var(--gold-l); }
+    .dropzone .dz-icon { font-size: 26px; margin-bottom: 6px; }
+    .dropzone .dz-file { margin-top: 8px; font-weight: 800; color: var(--text); }
+    .dropzone input[type="file"] { display: none; }
+
+    .spinner {
+      width: 14px; height: 14px;
+      border: 2px solid rgba(232, 196, 90, .3);
+      border-top-color: var(--gold-l);
+      border-radius: 50%;
+      display: inline-block;
+      vertical-align: middle;
+      margin-right: 8px;
+      animation: spin .7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+
+<body>
+  <header class="site-header">
+    <div class="header-logo">
+      <div class="logo-crest">⚙️</div>
+      <div>
+        <div class="logo-school">JOHN JOHN HIGH SCHOOL</div>
+        <div class="logo-sub">PANEL DE ADMINISTRACIÓN</div>
+      </div>
+    </div>
+    <a class="back-link" href="index.html">← Volver al horario</a>
+  </header>
+
+  <main>
+    <h1>Panel de administración</h1>
+    <div class="subtitle">Importa el calendario de evaluaciones y avisos, o edita el horario semanal.</div>
+
+    <div class="card">
+      <h2>1. Documento y curso</h2>
+      <div class="form-row">
+        <div class="field">
+          <label>Colegio</label>
+          <select id="colegioId">
+            <option value="8b14d518-332f-4fea-b78f-df6335c77842">John John High School</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Grado</label>
+          <select id="grado">
+            <option value="1">1° Básico</option>
+            <option value="2">2° Básico</option>
+            <option value="3">3° Básico</option>
+            <option value="4">4° Básico</option>
+            <option value="5" selected>5° Básico</option>
+            <option value="6">6° Básico</option>
+            <option value="7">7° Básico</option>
+            <option value="8">8° Básico</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="field">
+          <label>Archivo (PDF o DOCX)</label>
+          <div class="dropzone" id="dropzone">
+            <div class="dz-icon">📄</div>
+            <div>Arrastra el archivo aquí o haz clic para elegirlo</div>
+            <div class="dz-file" id="dzFile"></div>
+            <input type="file" id="archivo" accept=".pdf,.doc,.docx" />
+          </div>
+        </div>
+      </div>
+      <button class="btn" id="btnExtraer">🔎 Extraer evaluaciones</button>
+      <div class="status" id="statusExtraer"></div>
+    </div>
+
+    <div class="card" id="previewSection">
+      <h2>2. Revisar y editar evaluaciones</h2>
+      <div class="warnings" id="warnings"></div>
+      <table id="tablaPreview">
+        <thead>
+          <tr>
+            <th class="col-fecha">Fecha</th>
+            <th class="col-as">Asignatura</th>
+            <th class="col-tipo">Tipo</th>
+            <th>Contenidos</th>
+            <th class="col-del"></th>
+          </tr>
+        </thead>
+        <tbody id="tbodyPreview"></tbody>
+      </table>
+      <div class="empty-hint" id="emptyHint" style="display:none">No quedan evaluaciones por guardar.</div>
+    </div>
+
+    <div class="card" id="previewAvisosSection">
+      <h2>2b. Revisar y editar avisos</h2>
+      <table id="tablaAvisos">
+        <thead>
+          <tr>
+            <th class="col-fecha">Fecha</th>
+            <th class="col-tipo">Tipo</th>
+            <th>Descripción</th>
+            <th class="col-del"></th>
+          </tr>
+        </thead>
+        <tbody id="tbodyAvisos"></tbody>
+      </table>
+      <div class="empty-hint" id="emptyHintAvisos" style="display:none">No quedan avisos por guardar.</div>
+    </div>
+
+    <div class="card" id="saveSection">
+      <h2>3. Guardar</h2>
+      <button class="btn" id="btnGuardar">💾 Guardar en base de datos</button>
+      <div class="status" id="statusGuardar"></div>
+    </div>
+
+    <div class="card">
+      <h2>Horario semanal</h2>
+      <div class="subtitle" style="margin-bottom:16px">
+        Los alumnos siempre ven, automáticamente, el horario del año calendario actual. Aquí puedes revisar ese año, corregirlo,
+        o preparar con anticipación el del año siguiente (no se mostrará hasta que llegue esa fecha).
+      </div>
+      <div class="form-row">
+        <div class="field">
+          <label>Colegio</label>
+          <select id="hColegioId">
+            <option value="8b14d518-332f-4fea-b78f-df6335c77842">John John High School</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Grado</label>
+          <select id="hGrado">
+            <option value="1">1° Básico</option>
+            <option value="2">2° Básico</option>
+            <option value="3">3° Básico</option>
+            <option value="4">4° Básico</option>
+            <option value="5" selected>5° Básico</option>
+            <option value="6">6° Básico</option>
+            <option value="7">7° Básico</option>
+            <option value="8">8° Básico</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Año</label>
+          <input type="number" id="hAnio" min="2020" max="2035" step="1" />
+        </div>
+      </div>
+      <div class="nota-anio" id="notaAnio"></div>
+      <button class="btn btn-secondary" id="btnCargarHorario">📂 Cargar este colegio/grado/año</button>
+      <button class="btn btn-secondary" id="btnAnioSiguiente" type="button" title="Solo cambia el número de año arriba, no guarda nada">➡️ Preparar año siguiente</button>
+      <div class="status" id="statusHorario"></div>
+      <div id="horarioGridWrap" style="margin-top:16px; overflow-x:auto;"></div>
+      <button class="btn" id="btnGuardarHorario" style="margin-top:14px; display:none;">💾 Guardar horario</button>
+      <div class="status" id="statusGuardarHorario"></div>
+    </div>
+  </main>
+
+  <script>
+    var ASIGNATURAS = ['Matematicas', 'Lenguaje', 'Historia', 'Ciencias', 'Ingles', 'Ed. Fisica', 'Musica', 'Artes', 'Tecnologia'];
+    var TIPOS = ['prueba', 'trabajo', 'tarea', 'disertacion', 'laboratorio'];
+    var TIPOS_AVISO = ['salida_temprana', 'vacaciones', 'feriado', 'evento', 'otro'];
+    // El horario semanal admite 4 asignaturas más que las evaluaciones (Orientacion, Educ. Cristiana, etc.)
+    var ASIGNATURAS_HORARIO = ASIGNATURAS.concat(['Orientacion', 'Educ. Cristiana', 'Artes Visuales', 'Libre']);
+
+    function setStatus(el, tipo, texto) {
+      el.className = 'status show ' + tipo;
+      el.innerHTML = tipo === 'loading' ? '<span class="spinner"></span>' + texto : texto;
+    }
+    function clearStatus(el) {
+      el.className = 'status';
+      el.textContent = '';
+    }
+
+    // --- Dropzone (drag & drop + click) ---
+    var dropzone = document.getElementById('dropzone');
+    var inputArchivo = document.getElementById('archivo');
+    var dzFile = document.getElementById('dzFile');
+
+    function mostrarArchivoElegido(file) {
+      dzFile.textContent = file ? '📎 ' + file.name + ' (' + (file.size / 1024).toFixed(0) + ' KB)' : '';
+    }
+
+    dropzone.addEventListener('click', function () { inputArchivo.click(); });
+    inputArchivo.addEventListener('change', function () {
+      mostrarArchivoElegido(inputArchivo.files[0]);
+    });
+    ['dragenter', 'dragover'].forEach(function (evt) {
+      dropzone.addEventListener(evt, function (e) {
+        e.preventDefault(); e.stopPropagation();
+        dropzone.classList.add('drag-over');
+      });
+    });
+    ['dragleave', 'drop'].forEach(function (evt) {
+      dropzone.addEventListener(evt, function (e) {
+        e.preventDefault(); e.stopPropagation();
+        dropzone.classList.remove('drag-over');
+      });
+    });
+    dropzone.addEventListener('drop', function (e) {
+      var files = e.dataTransfer.files;
+      if (files && files.length) {
+        inputArchivo.files = files;
+        mostrarArchivoElegido(files[0]);
+      }
+    });
+
+    function leerArchivoBase64(file) {
+      return new Promise(function (resolve, reject) {
+        var reader = new FileReader();
+        reader.onload = function () {
+          var resultado = reader.result;
+          var base64 = resultado.substring(resultado.indexOf(',') + 1);
+          resolve(base64);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function filaHtml(ev, idx) {
+      var opsAsig = ASIGNATURAS.map(function (a) {
+        return '<option value="' + a + '"' + (a === ev.asignatura ? ' selected' : '') + '>' + a + '</option>';
+      }).join('');
+      var opsTipo = TIPOS.map(function (t) {
+        return '<option value="' + t + '"' + (t === ev.tipo ? ' selected' : '') + '>' + t + '</option>';
+      }).join('');
+      return '<tr data-idx="' + idx + '">' +
+        '<td class="col-fecha"><input type="date" class="f-fecha" value="' + (ev.fecha || '') + '"></td>' +
+        '<td class="col-as"><select class="f-asig">' + opsAsig + '</select></td>' +
+        '<td class="col-tipo"><select class="f-tipo">' + opsTipo + '</select></td>' +
+        '<td><textarea class="f-cont">' + (ev.contenidos || '') + '</textarea></td>' +
+        '<td class="col-del"><button class="row-del" onclick="borrarFila(this)">✕</button></td>' +
+        '</tr>';
+    }
+
+    function borrarFila(btn) {
+      var tr = btn.closest('tr');
+      tr.parentNode.removeChild(tr);
+      document.getElementById('emptyHint').style.display =
+        document.getElementById('tbodyPreview').children.length ? 'none' : 'block';
+    }
+
+    function filaAvisoHtml(av) {
+      var opsTipo = TIPOS_AVISO.map(function (t) {
+        return '<option value="' + t + '"' + (t === av.tipo ? ' selected' : '') + '>' + t + '</option>';
+      }).join('');
+      return '<tr>' +
+        '<td class="col-fecha"><input type="date" class="a-fecha" value="' + (av.fecha || '') + '"></td>' +
+        '<td class="col-tipo"><select class="a-tipo">' + opsTipo + '</select></td>' +
+        '<td><textarea class="a-desc">' + (av.descripcion || '') + '</textarea></td>' +
+        '<td class="col-del"><button class="row-del" onclick="borrarFilaAviso(this)">✕</button></td>' +
+        '</tr>';
+    }
+
+    function borrarFilaAviso(btn) {
+      var tr = btn.closest('tr');
+      tr.parentNode.removeChild(tr);
+      document.getElementById('emptyHintAvisos').style.display =
+        document.getElementById('tbodyAvisos').children.length ? 'none' : 'block';
+    }
+
+    function renderPreview(evaluaciones, avisos, warnings) {
+      var tbody = document.getElementById('tbodyPreview');
+      tbody.innerHTML = evaluaciones.map(filaHtml).join('');
+      document.getElementById('emptyHint').style.display = evaluaciones.length ? 'none' : 'block';
+
+      var tbodyAv = document.getElementById('tbodyAvisos');
+      tbodyAv.innerHTML = avisos.map(filaAvisoHtml).join('');
+      document.getElementById('emptyHintAvisos').style.display = avisos.length ? 'none' : 'block';
+
+      var wEl = document.getElementById('warnings');
+      if (warnings && warnings.length) {
+        wEl.className = 'warnings show';
+        wEl.innerHTML = '⚠️ La IA descartó ' + warnings.length + ' fila(s) por datos incompletos/no reconocidos:<ul>' +
+          warnings.map(function (w) { return '<li>' + w + '</li>'; }).join('') + '</ul>';
+      } else {
+        wEl.className = 'warnings';
+        wEl.innerHTML = '';
+      }
+
+      document.getElementById('previewSection').className = 'card show';
+      document.getElementById('previewAvisosSection').className = 'card show';
+      document.getElementById('saveSection').className = 'card show';
+    }
+
+    document.getElementById('btnExtraer').addEventListener('click', function () {
+      var btn = this;
+      var archivo = inputArchivo.files[0];
+      var statusEl = document.getElementById('statusExtraer');
+
+      if (!archivo) {
+        setStatus(statusEl, 'err', 'Selecciona un archivo primero.');
+        return;
+      }
+
+      btn.disabled = true;
+      var segundos = 0;
+      setStatus(statusEl, 'loading', 'Leyendo archivo...');
+      var intervalo = setInterval(function () {
+        segundos++;
+        setStatus(statusEl, 'loading', 'Extrayendo con IA... (' + segundos + 's) esto normalmente toma entre 5 y 20s');
+      }, 1000);
+
+      function terminar() {
+        clearInterval(intervalo);
+        btn.disabled = false;
+      }
+
+      var controller = new AbortController();
+      var timeoutId = setTimeout(function () { controller.abort(); }, 90000);
+
+      leerArchivoBase64(archivo).then(function (base64) {
+        return fetch('/api/extraer-evaluaciones', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            filename: archivo.name,
+            mimeType: archivo.type || 'application/pdf',
+            fileBase64: base64
+          }),
+          signal: controller.signal
+        });
+      }).then(function (r) { return r.json().then(function (data) { return { ok: r.ok, data: data }; }); })
+        .then(function (res) {
+          clearTimeout(timeoutId);
+          terminar();
+          if (!res.ok) {
+            setStatus(statusEl, 'err', '❌ ' + (res.data.error || 'Error al extraer'));
+            return;
+          }
+          clearStatus(statusEl);
+          renderPreview(res.data.evaluaciones || [], res.data.avisos || [], res.data.warnings || []);
+        }).catch(function (err) {
+          clearTimeout(timeoutId);
+          terminar();
+          if (err.name === 'AbortError') {
+            setStatus(statusEl, 'err', '❌ La IA no respondió en 90s. Puede ser un problema de red/firewall local hacia Google. Revisa la terminal donde corre "vercel dev" por más detalle, y vuelve a intentar.');
+          } else {
+            setStatus(statusEl, 'err', '❌ Error de red: ' + err.message);
+          }
+        });
+    });
+
+    document.getElementById('btnGuardar').addEventListener('click', function () {
+      var statusEl = document.getElementById('statusGuardar');
+      var evaluaciones = [];
+      document.querySelectorAll('#tbodyPreview tr').forEach(function (tr) {
+        evaluaciones.push({
+          fecha: tr.querySelector('.f-fecha').value,
+          asignatura: tr.querySelector('.f-asig').value,
+          tipo: tr.querySelector('.f-tipo').value,
+          contenidos: tr.querySelector('.f-cont').value
+        });
+      });
+
+      var avisos = [];
+      document.querySelectorAll('#tbodyAvisos tr').forEach(function (tr) {
+        avisos.push({
+          fecha: tr.querySelector('.a-fecha').value,
+          tipo: tr.querySelector('.a-tipo').value,
+          descripcion: tr.querySelector('.a-desc').value
+        });
+      });
+
+      if (!evaluaciones.length && !avisos.length) {
+        setStatus(statusEl, 'err', 'No hay evaluaciones ni avisos para guardar.');
+        return;
+      }
+
+      setStatus(statusEl, 'loading', 'Guardando...');
+
+      fetch('/api/guardar-evaluaciones', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          colegio_id: document.getElementById('colegioId').value,
+          grado: document.getElementById('grado').value,
+          evaluaciones: evaluaciones,
+          avisos: avisos
+        })
+      }).then(function (r) { return r.json().then(function (data) { return { ok: r.ok, data: data }; }); })
+        .then(function (res) {
+          if (!res.ok) {
+            setStatus(statusEl, 'err', '❌ ' + (res.data.error || 'Error al guardar'));
+            return;
+          }
+          setStatus(statusEl, 'ok', '✅ ' + res.data.evaluacionesInsertadas + ' evaluación(es) y ' + res.data.avisosInsertados + ' aviso(s) guardados correctamente.');
+          document.getElementById('tbodyPreview').innerHTML = '';
+          document.getElementById('emptyHint').style.display = 'block';
+          document.getElementById('tbodyAvisos').innerHTML = '';
+          document.getElementById('emptyHintAvisos').style.display = 'block';
+        }).catch(function (err) {
+          setStatus(statusEl, 'err', '❌ Error de red: ' + err.message);
+        });
+    });
+
+    // --- Editor de horario semanal ---
+    var DIAS_HORARIO = [1, 2, 3, 4, 5];
+    var DIAS_LABEL = { 1: 'Lunes', 2: 'Martes', 3: 'Miércoles', 4: 'Jueves', 5: 'Viernes' };
+    var BLOQUES_HORARIO = [1, 2, 3, 4, 5, 6, 7, 8];
+    var ANIO_ACTUAL = new Date().getFullYear();
+
+    function actualizarNotaAnio() {
+      var input = document.getElementById('hAnio');
+      var nota = document.getElementById('notaAnio');
+      var anio = Number(input.value);
+      if (anio === ANIO_ACTUAL) {
+        nota.className = 'nota-anio';
+        nota.textContent = '✓ Este es el año vigente — lo que edites aquí es exactamente lo que ven los alumnos ahora mismo.';
+      } else {
+        nota.className = 'nota-anio warn';
+        nota.textContent = '⚠️ Año vigente para los alumnos: ' + ANIO_ACTUAL + '. Estás viendo/editando ' + anio + ', que ' +
+          (anio > ANIO_ACTUAL ? 'todavía no se muestra (se activa solo cuando llegue ese año).' : 'ya no se muestra (quedó como historial).');
+      }
+    }
+
+    function renderGridHorario(celdas, bloquesConfig) {
+      var matriz = {};
+      DIAS_HORARIO.forEach(function (d) { matriz[d] = {}; });
+      (celdas || []).forEach(function (c) { matriz[c.dia_semana][c.bloque] = c.asignatura; });
+
+      var horas = {};
+      (bloquesConfig || []).forEach(function (b) { horas[b.bloque] = b; });
+
+      var opsAsig = function (actual) {
+        return ASIGNATURAS_HORARIO.map(function (a) {
+          return '<option value="' + a + '"' + (a === actual ? ' selected' : '') + '>' + a + '</option>';
+        }).join('');
+      };
+
+      var h = '<table class="grid-horario"><thead><tr><th>Bloque</th>';
+      DIAS_HORARIO.forEach(function (d) { h += '<th>' + DIAS_LABEL[d] + '</th>'; });
+      h += '<th>Hora L-J</th><th>Hora V</th></tr></thead><tbody>';
+
+      BLOQUES_HORARIO.forEach(function (b) {
+        h += '<tr data-bloque="' + b + '"><td class="bloque-num">' + b + '</td>';
+        DIAS_HORARIO.forEach(function (d) {
+          h += '<td><select class="celda-asig" data-dia="' + d + '" data-bloque="' + b + '">' + opsAsig(matriz[d][b] || 'Libre') + '</select></td>';
+        });
+        var bc = horas[b] || { hora_lj: '', hora_v: '' };
+        h += '<td><input type="text" class="hora-lj" value="' + bc.hora_lj + '" placeholder="08:00-08:45"></td>';
+        h += '<td><input type="text" class="hora-v" value="' + bc.hora_v + '" placeholder="08:00-08:45"></td>';
+        h += '</tr>';
+      });
+      h += '</tbody></table>';
+
+      document.getElementById('horarioGridWrap').innerHTML = h;
+      document.getElementById('btnGuardarHorario').style.display = 'inline-flex';
+    }
+
+    document.getElementById('hAnio').addEventListener('input', actualizarNotaAnio);
+
+    document.getElementById('btnAnioSiguiente').addEventListener('click', function () {
+      var input = document.getElementById('hAnio');
+      input.value = Number(input.value) + 1;
+      actualizarNotaAnio();
+    });
+
+    function cargarHorario() {
+      var statusEl = document.getElementById('statusHorario');
+      var colegioId = document.getElementById('hColegioId').value;
+      var grado = document.getElementById('hGrado').value;
+      var anio = document.getElementById('hAnio').value;
+
+      setStatus(statusEl, 'loading', 'Cargando horario...');
+
+      fetch('/api/obtener-horario?colegio_id=' + encodeURIComponent(colegioId) + '&grado=' + grado + '&anio=' + anio)
+        .then(function (r) { return r.json().then(function (data) { return { ok: r.ok, data: data }; }); })
+        .then(function (res) {
+          if (!res.ok) {
+            setStatus(statusEl, 'err', '❌ ' + (res.data.error || 'Error al cargar'));
+            return;
+          }
+          clearStatus(statusEl);
+          renderGridHorario(res.data.celdas, res.data.bloquesConfig);
+          if (!res.data.celdas.length) {
+            setStatus(statusEl, 'ok', 'No hay horario guardado para ' + anio + ' todavía — puedes crearlo desde cero y guardarlo.');
+          }
+        }).catch(function (err) {
+          setStatus(statusEl, 'err', '❌ Error de red: ' + err.message);
+        });
+    }
+
+    document.getElementById('btnCargarHorario').addEventListener('click', cargarHorario);
+
+    // Al abrir el panel, mostrar de inmediato el horario del año vigente (el que ven los alumnos).
+    document.getElementById('hAnio').value = ANIO_ACTUAL;
+    actualizarNotaAnio();
+    cargarHorario();
+
+    document.getElementById('btnGuardarHorario').addEventListener('click', function () {
+      var statusEl = document.getElementById('statusGuardarHorario');
+      var celdas = [];
+      document.querySelectorAll('.celda-asig').forEach(function (sel) {
+        celdas.push({ dia_semana: Number(sel.dataset.dia), bloque: Number(sel.dataset.bloque), asignatura: sel.value });
+      });
+
+      var bloquesConfig = [];
+      document.querySelectorAll('#horarioGridWrap tbody tr').forEach(function (tr) {
+        bloquesConfig.push({
+          bloque: Number(tr.dataset.bloque),
+          hora_lj: tr.querySelector('.hora-lj').value,
+          hora_v: tr.querySelector('.hora-v').value
+        });
+      });
+
+      setStatus(statusEl, 'loading', 'Guardando horario...');
+
+      fetch('/api/guardar-horario', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          colegio_id: document.getElementById('hColegioId').value,
+          grado: document.getElementById('hGrado').value,
+          anio: document.getElementById('hAnio').value,
+          celdas: celdas,
+          bloquesConfig: bloquesConfig
+        })
+      }).then(function (r) { return r.json().then(function (data) { return { ok: r.ok, data: data }; }); })
+        .then(function (res) {
+          if (!res.ok) {
+            setStatus(statusEl, 'err', '❌ ' + (res.data.error || 'Error al guardar'));
+            return;
+          }
+          setStatus(statusEl, 'ok', '✅ Horario guardado: ' + res.data.celdasGuardadas + ' celdas, ' + res.data.bloquesGuardados + ' bloques de horario.');
+        }).catch(function (err) {
+          setStatus(statusEl, 'err', '❌ Error de red: ' + err.message);
+        });
+    });
+  </script>
+</body>
+
+</html>

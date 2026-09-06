@@ -3,10 +3,13 @@
   "version": "1.0.0",
   "description": "Sistema de Horarios Escolares",
   "main": "api/horarios.js",
+  "type": "module",
   "scripts": {
     "start": "node api/horarios.js"
   },
   "dependencies": {
-    "@neondatabase/serverless": "^0.9.5"
+    "@neondatabase/serverless": "^0.9.5",
+    "dotenv": "^16.4.5",
+    "mammoth": "^1.8.0"
   }
 }
