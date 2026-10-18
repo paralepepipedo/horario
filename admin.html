@@ -195,6 +195,9 @@
     td.col-fecha { width: 130px; }
     td.col-as, td.col-tipo { width: 130px; }
     td.col-del { width: 34px; text-align: center; }
+    td.col-acc { width: 76px; text-align: center; white-space: nowrap; }
+    tr.fila-pasada input.g-fecha { color: var(--red-l); }
+    tr.fila-modificada input.g-fecha { border-color: var(--gold); }
 
     .row-del {
       background: none; border: none; color: var(--text-mut); cursor: pointer; font-size: 15px;
@@ -338,6 +341,49 @@
       <h2>3. Guardar</h2>
       <button class="btn" id="btnGuardar">💾 Guardar en base de datos</button>
       <div class="status" id="statusGuardar"></div>
+    </div>
+
+    <div class="card">
+      <h2>Evaluaciones guardadas (reprogramar / editar)</h2>
+      <div class="subtitle" style="margin-bottom:16px">
+        Si el profesor aplaza una evaluación, cambia aquí la fecha y pulsa 💾. Se muestran las evaluaciones de los últimos 30 días en adelante.
+      </div>
+      <div class="form-row">
+        <div class="field">
+          <label>Colegio</label>
+          <select id="gColegioId">
+            <option value="8b14d518-332f-4fea-b78f-df6335c77842">John John High School</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Grado</label>
+          <select id="gGrado">
+            <option value="1">1° Básico</option>
+            <option value="2">2° Básico</option>
+            <option value="3">3° Básico</option>
+            <option value="4">4° Básico</option>
+            <option value="5" selected>5° Básico</option>
+            <option value="6">6° Básico</option>
+            <option value="7">7° Básico</option>
+            <option value="8">8° Básico</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn btn-secondary" id="btnCargarGuardadas" type="button">📂 Cargar evaluaciones guardadas</button>
+      <div class="status" id="statusGuardadas"></div>
+      <table id="tablaGuardadas" style="display:none; margin-top:16px;">
+        <thead>
+          <tr>
+            <th class="col-fecha">Fecha</th>
+            <th class="col-as">Asignatura</th>
+            <th class="col-tipo">Tipo</th>
+            <th>Contenidos</th>
+            <th class="col-acc"></th>
+          </tr>
+        </thead>
+        <tbody id="tbodyGuardadas"></tbody>
+      </table>
+      <div class="empty-hint" id="emptyHintGuardadas" style="display:none">No hay evaluaciones guardadas para este curso.</div>
     </div>
 
     <div class="card">
@@ -619,6 +665,118 @@
           setStatus(statusEl, 'err', '❌ Error de red: ' + err.message);
         });
     });
+
+    // --- Evaluaciones ya guardadas: reprogramar / editar / eliminar ---
+    function escAttr(s) {
+      return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function filaGuardadaHtml(ev) {
+      var asigs = ASIGNATURAS.indexOf(ev.asignatura) === -1 ? ASIGNATURAS.concat([ev.asignatura]) : ASIGNATURAS;
+      var tipos = TIPOS.indexOf(ev.tipo) === -1 ? TIPOS.concat([ev.tipo]) : TIPOS;
+      var opsAsig = asigs.map(function (a) {
+        return '<option value="' + escAttr(a) + '"' + (a === ev.asignatura ? ' selected' : '') + '>' + escAttr(a) + '</option>';
+      }).join('');
+      var opsTipo = tipos.map(function (t) {
+        return '<option value="' + escAttr(t) + '"' + (t === ev.tipo ? ' selected' : '') + '>' + escAttr(t) + '</option>';
+      }).join('');
+      var hoy = new Date().toISOString().substring(0, 10);
+      var fecha = (ev.fecha || '').substring(0, 10);
+      return '<tr data-id="' + escAttr(ev.id) + '" data-fecha-orig="' + fecha + '"' + (fecha < hoy ? ' class="fila-pasada"' : '') + '>' +
+        '<td class="col-fecha"><input type="date" class="g-fecha" value="' + fecha + '"></td>' +
+        '<td class="col-as"><select class="g-asig">' + opsAsig + '</select></td>' +
+        '<td class="col-tipo"><select class="g-tipo">' + opsTipo + '</select></td>' +
+        '<td><textarea class="g-cont">' + escAttr(ev.contenidos) + '</textarea></td>' +
+        '<td class="col-acc">' +
+          '<button class="row-del" title="Guardar cambios" onclick="guardarGuardada(this)">💾</button>' +
+          '<button class="row-del" title="Eliminar evaluación" onclick="eliminarGuardada(this)">🗑️</button>' +
+        '</td></tr>';
+    }
+
+    function cargarGuardadas() {
+      var statusEl = document.getElementById('statusGuardadas');
+      setStatus(statusEl, 'loading', 'Cargando evaluaciones...');
+      fetch('/api/gestionar-evaluaciones?colegio_id=' + encodeURIComponent(document.getElementById('gColegioId').value) +
+        '&grado=' + document.getElementById('gGrado').value)
+        .then(function (r) { return r.json().then(function (data) { return { ok: r.ok, data: data }; }); })
+        .then(function (res) {
+          if (!res.ok) {
+            setStatus(statusEl, 'err', '❌ ' + (res.data.error || 'Error al cargar'));
+            return;
+          }
+          clearStatus(statusEl);
+          var lista = res.data.evaluaciones || [];
+          document.getElementById('tbodyGuardadas').innerHTML = lista.map(filaGuardadaHtml).join('');
+          document.getElementById('tablaGuardadas').style.display = lista.length ? 'table' : 'none';
+          document.getElementById('emptyHintGuardadas').style.display = lista.length ? 'none' : 'block';
+        }).catch(function (err) {
+          setStatus(statusEl, 'err', '❌ Error de red: ' + err.message);
+        });
+    }
+
+    function guardarGuardada(btn) {
+      var tr = btn.closest('tr');
+      var statusEl = document.getElementById('statusGuardadas');
+      var fecha = tr.querySelector('.g-fecha').value;
+      if (!fecha) {
+        setStatus(statusEl, 'err', 'Indica la nueva fecha antes de guardar.');
+        return;
+      }
+      setStatus(statusEl, 'loading', 'Guardando cambios...');
+      fetch('/api/gestionar-evaluaciones', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: tr.dataset.id,
+          fecha: fecha,
+          asignatura: tr.querySelector('.g-asig').value,
+          tipo: tr.querySelector('.g-tipo').value,
+          contenidos: tr.querySelector('.g-cont').value
+        })
+      }).then(function (r) { return r.json().then(function (data) { return { ok: r.ok, data: data }; }); })
+        .then(function (res) {
+          if (!res.ok) {
+            setStatus(statusEl, 'err', '❌ ' + (res.data.error || 'Error al guardar'));
+            return;
+          }
+          var movida = fecha !== tr.dataset.fechaOrig;
+          setStatus(statusEl, 'ok', '✅ Evaluación actualizada' + (movida ? ' (reprogramada al ' + fecha + ')' : '') + '.');
+          if (movida) cargarGuardadas(); // reordena la tabla por la nueva fecha
+        }).catch(function (err) {
+          setStatus(statusEl, 'err', '❌ Error de red: ' + err.message);
+        });
+    }
+
+    function eliminarGuardada(btn) {
+      var tr = btn.closest('tr');
+      var statusEl = document.getElementById('statusGuardadas');
+      if (!confirm('¿Eliminar esta evaluación definitivamente?')) return;
+      setStatus(statusEl, 'loading', 'Eliminando...');
+      fetch('/api/gestionar-evaluaciones?id=' + encodeURIComponent(tr.dataset.id), { method: 'DELETE' })
+        .then(function (r) { return r.json().then(function (data) { return { ok: r.ok, data: data }; }); })
+        .then(function (res) {
+          if (!res.ok) {
+            setStatus(statusEl, 'err', '❌ ' + (res.data.error || 'Error al eliminar'));
+            return;
+          }
+          setStatus(statusEl, 'ok', '✅ Evaluación eliminada.');
+          tr.parentNode.removeChild(tr);
+          if (!document.getElementById('tbodyGuardadas').children.length) {
+            document.getElementById('tablaGuardadas').style.display = 'none';
+            document.getElementById('emptyHintGuardadas').style.display = 'block';
+          }
+        }).catch(function (err) {
+          setStatus(statusEl, 'err', '❌ Error de red: ' + err.message);
+        });
+    }
+
+    document.getElementById('btnCargarGuardadas').addEventListener('click', cargarGuardadas);
+    document.getElementById('gGrado').addEventListener('change', cargarGuardadas);
+    document.getElementById('tbodyGuardadas').addEventListener('input', function (e) {
+      var tr = e.target.closest('tr');
+      if (tr) tr.classList.add('fila-modificada');
+    });
+    cargarGuardadas();
 
     // --- Editor de horario semanal ---
     var DIAS_HORARIO = [1, 2, 3, 4, 5];
